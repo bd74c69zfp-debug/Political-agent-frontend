@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>YouTube Automation Dashboard</title>
+<style>
+  :root{--bg:#08111f;--card:#101a33;--line:#223154;--text:#eef2ff;--muted:#9aa9c8;--a:#60a5fa;--b:#8b5cf6;--ok:#22c55e;--warn:#f59e0b}
+  *{box-sizing:border-box} body{margin:0;font-family:Inter,Arial,sans-serif;background:linear-gradient(180deg,#07101e,#0f1730);color:var(--text)}
+  .wrap{max-width:1400px;margin:0 auto;padding:24px} h1{margin:0 0 8px;font-size:32px} p{margin:0 0 18px;color:var(--muted)}
+  .tabs{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}.tab{padding:10px 14px;border:1px solid var(--line);background:#0c1428;color:var(--text);border-radius:999px;cursor:pointer}.tab.active{background:rgba(96,165,250,.15)}
+  .panel{display:none}.panel.active{display:block}.grid{display:grid;grid-template-columns:1.05fr .95fr;gap:18px}.full{grid-column:1/-1}
+  .card{background:rgba(16,26,51,.96);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 14px 35px rgba(0,0,0,.22)}
+  label{display:block;margin:10px 0 6px;font-size:13px;font-weight:700;color:#d8e3ff} input,textarea,select{width:100%;background:#091225;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px 13px;font-size:14px}
+  textarea{min-height:110px;resize:vertical} .row{display:grid;grid-template-columns:1fr 1fr;gap:12px} .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  button{border:0;border-radius:12px;padding:12px 16px;font-weight:800;color:#fff;cursor:pointer;background:linear-gradient(90deg,var(--a),var(--b))}.ghost{background:transparent;border:1px solid var(--line)}
+  .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(34,197,94,.12);color:#9bf0b6;border:1px solid rgba(34,197,94,.18);font-size:12px;margin-bottom:8px}
+  .output{white-space:pre-wrap;background:#07101f;border:1px solid var(--line);border-radius:14px;padding:14px;line-height:1.55;min-height:120px}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.kpis>div{background:#091225;border:1px solid var(--line);border-radius:14px;padding:14px}.kpis strong{display:block;font-size:22px}.kpis span{color:var(--muted);font-size:13px}
+  @media (max-width: 980px){.grid,.row,.kpis{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>YouTube Automation Dashboard</h1>
+  <p>Single UI for topic planning, script generation, queue review, uploads, and WhatsApp command monitoring.</p>
+  <div class="tabs">
+    <button class="tab active" onclick="show('overview', this)">Overview</button>
+    <button class="tab" onclick="show('topics', this)">Topics</button>
+    <button class="tab" onclick="show('queue', this)">Queue</button>
+    <button class="tab" onclick="show('whatsapp', this)">WhatsApp</button>
+    <button class="tab" onclick="show('settings', this)">Settings</button>
+  </div>
+
+  <div id="overview" class="panel active">
+    <div class="grid">
+      <div class="card">
+        <span class="pill">Today</span>
+        <div class="kpis"><div><strong>12</strong><span>Ideas</span></div><div><strong>4</strong><span>Drafts</span></div><div><strong>2</strong><span>Queued</span></div><div><strong>1</strong><span>Ready</span></div></div>
+        <div style="height:14px"></div>
+        <div class="output">Pipeline status:\n- Topic intake: live\n- Fact pack: manual review\n- Script: ready\n- WhatsApp: connected\n- Uploads: private test mode</div>
+      </div>
+      <div class="card">
+        <span class="pill">Quick actions</span>
+        <div class="actions">
+          <button onclick="fillDemo()">Load demo topic</button>
+          <button class="ghost" onclick="alert('Queued for upload')">Queue latest</button>
+          <button class="ghost" onclick="alert('Sent WhatsApp reply')">Send WhatsApp ping</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="topics" class="panel">
+    <div class="grid">
+      <div class="card">
+        <span class="pill">Topic intake</span>
+        <label>Topic</label><input id="topic" placeholder="Example: New policy update" />
+        <div class="row"><div><label>Region</label><select id="region"><option>US politics</option><option>EU politics</option><option>UK politics</option><option>Global politics</option></select></div><div><label>Tone</label><select id="tone"><option>Neutral explainer</option><option>Sharp commentary</option><option>Breaking-news urgency</option></select></div></div>
+        <label>Verified facts</label><textarea id="facts" placeholder="One fact per line"></textarea>
+        <label>Why it matters</label><textarea id="stakes" placeholder="Explain the stakes"></textarea>
+        <div class="actions"><button onclick="generate()">Generate package</button><button class="ghost" onclick="saveDraft()">Save draft</button></div>
+      </div>
+      <div class="card">
+        <span class="pill">Generated output</span>
+        <div class="output" id="genout">Add a topic and click Generate package.</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="queue" class="panel">
+    <div class="card full">
+      <span class="pill">Queue</span>
+      <div class="output" id="queueout">No items in queue yet.</div>
+      <div class="actions"><button onclick="addQueue()">Add to queue</button><button class="ghost" onclick="approve()">Approve</button><button class="ghost" onclick="publish()">Mark published</button></div>
+    </div>
+  </div>
+
+  <div id="whatsapp" class="panel">
+    <div class="grid">
+      <div class="card">
+        <span class="pill">Commands</span>
+        <div class="output">/topstory\n/script [topic]\n/shorts [topic]\n/queue\n/approve [id]\n/status</div>
+      </div>
+      <div class="card">
+        <span class="pill">Webhook log</span>
+        <div class="output" id="wlog">Waiting for WhatsApp commands...</div>
+        <div class="actions"><button onclick="run('/topstory')">Topstory</button><button class="ghost" onclick="run('/queue')">Queue</button><button class="ghost" onclick="run('/approve 1')">Approve 1</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="settings" class="panel">
+    <div class="grid">
+      <div class="card">
+        <span class="pill">Environment</span>
+        <label>WhatsApp verify token</label><input placeholder="WHATSAPP_VERIFY_TOKEN" />
+        <label>WhatsApp app secret</label><input placeholder="WHATSAPP_APP_SECRET" />
+        <label>WhatsApp phone number id</label><input placeholder="WHATSAPP_PHONE_NUMBER_ID" />
+        <label>WhatsApp token</label><input placeholder="WHATSAPP_TOKEN" />
+      </div>
+      <div class="card">
+        <span class="pill">Deployment notes</span>
+        <div class="output">- Use HTTPS for webhook URLs.\n- Validate X-Hub-Signature-256.\n- Keep uploads private until tested.\n- Add auth before allowing edits.\n- Connect this UI to the Express backend.</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  function show(id, btn){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
+  function facts(){return document.getElementById('facts').value.split('\n').map(s=>s.trim()).filter(Boolean)}
+  function generate(){const topic=document.getElementById('topic').value.trim(); if(!topic || facts().length===0){alert('Add topic and facts'); return} const out=`Topic: ${topic}\nRegion: ${document.getElementById('region').value}\nTone: ${document.getElementById('tone').value}\n\nFacts:\n${facts().map((f,i)=>`${i+1}. ${f}`).join('\n')}\n\nWhy it matters:\n${document.getElementById('stakes').value.trim() || 'It affects the political narrative and viewer interest.'}\n\nNext step: send to queue for review.`; document.getElementById('genout').textContent=out; document.getElementById('queueout').textContent=`1. ${topic}\nStatus: draft`;}
+  function saveDraft(){document.getElementById('genout').textContent='Draft saved locally in the demo.'}
+  function fillDemo(){document.getElementById('topic').value='Election update';document.getElementById('facts').value='Candidate announcement confirmed\nPolling data released\nDebate scheduled';document.getElementById('stakes').value='Viewers want a quick summary of the latest shift.';generate()}
+  function addQueue(){document.getElementById('queueout').textContent+='\nAdded to production queue.'}
+  function approve(){document.getElementById('queueout').textContent+='\nApproved for publishing.'}
+  function publish(){document.getElementById('queueout').textContent+='\nMarked published.'}
+  function run(cmd){document.getElementById('wlog').textContent='User: '+cmd+'\nBot: command received and processed in the dashboard demo.'}
+</script>
+</body>
+</html>
