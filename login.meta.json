@@ -1,0 +1,4 @@
+{
+  "caption": "Login-enabled YouTube automation project",
+  "description": "Project extended with signup/login routes, JWT auth, and protected API endpoints."
+}
