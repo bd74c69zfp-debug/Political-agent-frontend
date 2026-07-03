@@ -1,4 +1,0 @@
-{
-  "caption": "Database-enabled YouTube automation project",
-  "description": "Project extended with Prisma PostgreSQL schema and persistent topics/logs storage."
-}
